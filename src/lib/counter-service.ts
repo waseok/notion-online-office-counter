@@ -10,6 +10,11 @@ export type DailyCounterStat = {
   views: number;
 };
 
+type DailyCounterRpcRow = {
+  view_date: string;
+  view_count: number | string;
+};
+
 function initialTotal(): number {
   const parsed = Number.parseInt(process.env.COUNTER_INITIAL_TOTAL ?? "0", 10);
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
@@ -67,16 +72,15 @@ export async function readDailyStats(): Promise<DailyCounterStat[]> {
     return [];
   }
 
-  const { data, error } = await getSupabaseAdmin()
-    .schema("private")
-    .from("counter_daily_views")
-    .select("view_date, view_count")
-    .eq("page_key", process.env.COUNTER_PAGE_KEY ?? DEFAULT_PAGE_KEY)
-    .order("view_date", { ascending: false });
+  const { data, error } = await getSupabaseAdmin().rpc("get_counter_daily_stats", {
+    p_page_key: process.env.COUNTER_PAGE_KEY ?? DEFAULT_PAGE_KEY,
+  });
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => {
+  const rows = (data ?? []) as DailyCounterRpcRow[];
+
+  return rows.map((row) => {
     const views = Number(row.view_count);
     if (!row.view_date || !Number.isSafeInteger(views)) {
       throw new Error("Daily counter stats contained an invalid value.");

@@ -104,7 +104,28 @@ begin
 end;
 $$;
 
+create or replace function public.get_counter_daily_stats(p_page_key text)
+returns table(view_date date, view_count bigint)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if p_page_key is null or char_length(p_page_key) not between 1 and 100 then
+    raise exception 'invalid page key';
+  end if;
+
+  return query
+  select daily.view_date, daily.view_count
+  from private.counter_daily_views as daily
+  where daily.page_key = p_page_key
+  order by daily.view_date desc;
+end;
+$$;
+
 revoke execute on function public.get_counter_stats(text) from public, anon, authenticated;
 revoke execute on function public.record_counter_view(text, uuid) from public, anon, authenticated;
+revoke execute on function public.get_counter_daily_stats(text) from public, anon, authenticated;
 grant execute on function public.get_counter_stats(text) to service_role;
 grant execute on function public.record_counter_view(text, uuid) to service_role;
+grant execute on function public.get_counter_daily_stats(text) to service_role;
