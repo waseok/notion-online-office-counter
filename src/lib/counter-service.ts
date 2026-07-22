@@ -5,6 +5,11 @@ import type { CounterRpcStats, CounterStats } from "@/types/counter";
 
 const DEFAULT_PAGE_KEY = "online-office-main";
 
+export type DailyCounterStat = {
+  date: string;
+  views: number;
+};
+
 function initialTotal(): number {
   const parsed = Number.parseInt(process.env.COUNTER_INITIAL_TOTAL ?? "0", 10);
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
@@ -55,4 +60,28 @@ export async function readStats(): Promise<CounterStats> {
 
   if (error) throw error;
   return normalizeStats(data);
+}
+
+export async function readDailyStats(): Promise<DailyCounterStat[]> {
+  if (process.env.COUNTER_DEMO_MODE === "true") {
+    return [];
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .schema("private")
+    .from("counter_daily_views")
+    .select("view_date, view_count")
+    .eq("page_key", process.env.COUNTER_PAGE_KEY ?? DEFAULT_PAGE_KEY)
+    .order("view_date", { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => {
+    const views = Number(row.view_count);
+    if (!row.view_date || !Number.isSafeInteger(views)) {
+      throw new Error("Daily counter stats contained an invalid value.");
+    }
+
+    return { date: row.view_date, views };
+  });
 }
