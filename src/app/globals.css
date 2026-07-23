@@ -130,6 +130,17 @@ body {
 }
 
 @media (max-width: 390px) {
+  .counter-banner {
+    height: 82px;
+    padding-block: 9px;
+  }
+
+  .counter-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+  }
+
   .metric-label-full {
     display: none;
   }
@@ -139,6 +150,7 @@ body {
   }
 
   .counter-metric {
+    justify-content: center;
     gap: 3px;
   }
 }
