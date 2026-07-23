@@ -31,7 +31,7 @@ body {
 
 body {
   display: grid;
-  place-items: center;
+  place-items: start center;
   color: var(--text-primary);
   background: var(--page-background);
   font-family: var(--font-geist-sans), "Pretendard", "Noto Sans KR", sans-serif;
